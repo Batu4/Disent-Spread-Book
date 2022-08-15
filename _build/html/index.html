@@ -40,6 +40,7 @@
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">Welcome to Disent Spread Book’s documentation!</a></li>
 <li><a class="reference internal" href="#amortization-schedule">Amortization Schedule</a></li>
+<li><a class="reference internal" href="#bond-calculation">Bond Calculation</a></li>
 </ul>
 </div>
         </div>
@@ -76,7 +77,7 @@
 <p>You are considering a mortgage and you would like to generate an amortization schedule.
 Choose the Amortization Schedule example from the spread book home page.
 (internal note: assumption is that the example is ready to go)</p>
-<p>You need to input parameters in the Spread Book and expect 4 outputs, amortization schedule table, Zero Rate Curve, Discounted Cash Flows and Mortgage Summary.</p>
+<p>You need to input parameters in the Spread Book and expect 4 outputs: amortization schedule table, Zero Rate Curve, Discounted Cash Flows and Mortgage Summary.</p>
 <p>How much is the house?… let’s call this Principal, let’s input 1mm (mm will convert to millions)</p>
 <p>What is the interest rate?… let’s put the Rate as 3%</p>
 <p>How often do you pay?…. put down as date period, such as 1m</p>
@@ -93,9 +94,15 @@ Choose the Amortization Schedule example from the spread book home page.
 <span class="n">Inputs</span><span class="o">.</span><span class="n">PayFreq</span> <span class="o">=</span>        <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Inputs&#39;</span><span class="p">,</span> <span class="s1">&#39;PayFreq&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="n">rd</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>                    <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">rd</span><span class="p">)</span>
 <span class="n">Inputs</span><span class="o">.</span><span class="n">Rate</span> <span class="o">=</span>           <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Inputs&#39;</span><span class="p">,</span> <span class="s1">&#39;Rate&#39;</span><span class="p">,</span>          <span class="n">default</span><span class="o">=</span><span class="mf">0.03</span>                            <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">pct</span><span class="p">)</span>
 <span class="n">Inputs</span><span class="o">.</span><span class="n">Principal</span> <span class="o">=</span>      <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Inputs&#39;</span><span class="p">,</span> <span class="s1">&#39;Principal&#39;</span><span class="p">,</span>     <span class="n">default</span><span class="o">=</span><span class="mf">750e3</span>                           <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">ccy</span><span class="p">(</span><span class="s1">&#39;USD&#39;</span><span class="p">))</span>
+
+<span class="p">[</span><span class="n">Inputs</span><span class="p">]</span> <span class="n">Start</span> <span class="n">Date</span><span class="p">:</span> <span class="n">today</span><span class="p">()</span>
+<span class="p">[</span><span class="n">Inputs</span><span class="p">]</span> <span class="n">Tenor</span><span class="p">:</span> <span class="mi">30</span><span class="n">y</span>
+<span class="p">[</span><span class="n">Inputs</span><span class="p">]</span> <span class="n">PayFreq</span><span class="p">:</span> <span class="mi">1</span><span class="n">m</span>
+<span class="p">[</span><span class="n">Inputs</span><span class="p">]</span> <span class="n">Rate</span><span class="p">:</span> <span class="mf">0.03</span>
+<span class="p">[</span><span class="n">Inputs</span><span class="p">]</span> <span class="n">Principal</span><span class="p">:</span> <span class="mi">1000000</span>
 </pre></div>
 </div>
-<p>Now What&gt;? … We create an amortization function ‘mort’.</p>
+<p>Now What? … We create an amortization function ‘mort’.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">pmts</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="k">def</span> <span class="nf">mort</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">freq</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">pmts</span><span class="o">=</span><span class="p">[]):</span>
@@ -130,7 +137,226 @@ Choose the Amortization Schedule example from the spread book home page.
 </div>
 <p>The mort function calculates the amortization schedule.
 The reason that the function returns balance is that it is also used to calculate payment value at each payment frequency.
-The following code passes payment value to mort function until it finds the right payment value which makes the last balance equals zero.</p>
+The following code passes payment value to mort function until it finds the right payment value which makes the last balance equal zero.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">dates</span><span class="o">.</span><span class="n">yearfrac</span><span class="p">(</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Tenor</span><span class="p">),</span><span class="mi">0</span><span class="p">))</span>
+<span class="c1"># freq = int(1/dates.yearfrac(Inputs.PayFreq))</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">dates</span><span class="o">.</span><span class="n">yearfrac</span><span class="p">(</span><span class="n">Inputs</span><span class="o">.</span><span class="n">PayFreq</span><span class="p">),</span><span class="mi">0</span><span class="p">))</span>
+<span class="c1"># Lambda function &#39;mort_a&#39; gets payment value as &#39;a&#39; and passes into &#39;mort&#39; function</span>
+<span class="n">mort_a</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">mort</span><span class="p">(</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Principal</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">freq</span><span class="p">,</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Rate</span><span class="p">,</span><span class="n">pmts</span><span class="o">=</span><span class="n">pmts</span><span class="p">)</span>
+<span class="c1"># The following code iterates payment value into the lambda function &#39;mort_a&#39; until it gets the right payment value</span>
+<span class="c1"># which lets the last balance equal 0. Then it returns the amortization schedule</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">dscipy_root</span><span class="p">(</span><span class="n">mort_a</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pmts</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mort_a</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pmts</span><span class="p">)</span>
+<span class="n">Amortization_Schedule</span> <span class="o">=</span> <span class="n">disent_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+           <span class="n">Pays</span>        <span class="n">Balance</span>     <span class="n">Interest</span>      <span class="n">Payment</span>    <span class="n">Principal</span>
+<span class="mi">0</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">09</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">998283.959663</span>       <span class="mf">2500.0</span>  <span class="mf">4216.040337</span>  <span class="mf">1716.040337</span>
+<span class="mi">1</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">10</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">996563.629225</span>  <span class="mf">2495.709899</span>  <span class="mf">4216.040337</span>  <span class="mf">1720.330438</span>
+<span class="mi">2</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">12</span>   <span class="mf">994838.99796</span>  <span class="mf">2491.409073</span>  <span class="mf">4216.040337</span>  <span class="mf">1724.631264</span>
+<span class="mi">3</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">993110.055118</span>  <span class="mf">2487.097495</span>  <span class="mf">4216.040337</span>  <span class="mf">1728.942842</span>
+<span class="mi">4</span>    <span class="mi">2024</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">991376.789918</span>  <span class="mf">2482.775138</span>  <span class="mf">4216.040337</span>  <span class="mf">1733.265199</span>
+<span class="o">..</span>          <span class="o">...</span>            <span class="o">...</span>          <span class="o">...</span>          <span class="o">...</span>          <span class="o">...</span>
+<span class="mi">355</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">12</span>   <span class="mf">16759.285049</span>    <span class="mf">52.307545</span>  <span class="mf">4216.040337</span>  <span class="mf">4163.732793</span>
+<span class="mi">356</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">12</span>   <span class="mf">12585.142925</span>    <span class="mf">41.898213</span>  <span class="mf">4216.040337</span>  <span class="mf">4174.142125</span>
+<span class="mi">357</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">12</span>    <span class="mf">8400.565445</span>    <span class="mf">31.462857</span>  <span class="mf">4216.040337</span>   <span class="mf">4184.57748</span>
+<span class="mi">358</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">12</span>    <span class="mf">4205.526521</span>    <span class="mf">21.001414</span>  <span class="mf">4216.040337</span>  <span class="mf">4195.038924</span>
+<span class="mi">359</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">12</span>            <span class="mf">0.0</span>    <span class="mf">10.513816</span>  <span class="mf">4216.040337</span>  <span class="mf">4205.526521</span>
+
+<span class="p">[</span><span class="mi">360</span> <span class="n">rows</span> <span class="n">x</span> <span class="mi">5</span> <span class="n">columns</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The Amortization Schedule would look like the following chart</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Amortization.png"><img alt="Inputs" src="_images/Amortization.png" style="width: 1072.5px; height: 601.5px;" /></a>
+</figure>
+<p>Now you want to see the discounted cash flows and the return of the mortgage.
+First you need the Zero Rate Curve.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Spot_Curve</span> <span class="o">=</span> <span class="n">disent_spreadbook</span><span class="p">(</span><span class="s1">&#39;USD LIBOR 3M Zero Curve&#39;</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Pillar&#39;</span><span class="p">,</span><span class="s1">&#39;Zero Rate&#39;</span><span class="p">,</span><span class="s1">&#39;Disc Factor&#39;</span><span class="p">])</span>
+<span class="c1"># note: the following zero rate is not real zero rate</span>
+                     <span class="n">Pillar</span> <span class="n">Zero_Rate</span> <span class="n">Disc_Factor</span>
+<span class="mi">0</span>    <span class="n">relativedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=+</span><span class="mi">1</span><span class="p">)</span>    <span class="mf">0.0015</span>    <span class="mf">0.999999</span>
+<span class="mi">1</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">3</span><span class="p">)</span>      <span class="mf">0.03</span>       <span class="mf">0.999</span>
+<span class="mi">2</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">6</span><span class="p">)</span>    <span class="mf">0.0325</span>        <span class="mf">0.98</span>
+<span class="mi">3</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">9</span><span class="p">)</span>     <span class="mf">0.033</span>        <span class="mf">0.97</span>
+<span class="mi">4</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=+</span><span class="mi">10</span><span class="p">)</span>     <span class="mf">0.035</span>        <span class="mf">0.97</span>
+</pre></div>
+</div>
+<p>Disent_spreadbook is a disent function which will provide zero rate curve. The calculation formula has been encapsulated in the function.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/ZeroRate.png"><img alt="Inputs" src="_images/ZeroRate.png" style="width: 1072.5px; height: 534.75px;" /></a>
+</figure>
+<p>In the Zero Rate Curve, the column Zero_Rate and Disc_Factor have the values 1 day, 3months, 6months, 9 months and 10 months.
+When the zero rate pillar is not exactly these months, we use python interpolation to find the corresponding zero rates.
+For instance, if we want to use 2months zero rate, we would interpolate between 1day zero rate and 3months zero rate to find the 2months zero rate.</p>
+<p>Then, you use the following code to create the Discounted Cash Flows to see the present value of your future cash flows.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Proceeds at first date</span>
+
+<span class="n">Proceeds</span> <span class="o">=</span> <span class="n">disent_table</span><span class="p">()</span>
+<span class="n">Proceeds</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">Inputs</span><span class="o">.</span><span class="n">Start_Date</span>
+<span class="n">Proceeds</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="o">-</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Principal</span>
+<span class="c1"># print(Proceeds)</span>
+
+<span class="c1"># PV&#39;s</span>
+<span class="c1"># Add Payment dates, Cash Flow and Discount Factor</span>
+<span class="n">PVs</span> <span class="o">=</span> <span class="n">disent_table</span><span class="p">()</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Proceeds</span><span class="o">.</span><span class="n">Pays</span><span class="p">,</span><span class="n">Amortization_Schedule</span><span class="o">.</span><span class="n">Pays</span><span class="p">))</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Proceeds</span><span class="o">.</span><span class="n">Flow</span><span class="p">,</span><span class="n">Amortization_Schedule</span><span class="o">.</span><span class="n">Payment</span><span class="p">))</span>
+<span class="c1"># Interpolate Zero Rate Curve to find the corresponding discount factor of the payment frequency</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">Disc_Factor</span> <span class="o">=</span> <span class="n">dscipy</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="n">Globals</span><span class="o">.</span><span class="n">Horizon</span><span class="o">+</span><span class="n">Spot_Curve</span><span class="o">.</span><span class="n">Pillar</span><span class="p">,</span><span class="n">Spot_Curve</span><span class="o">.</span><span class="n">Disc_Factor</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)(</span><span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span><span class="p">)</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">PV</span> <span class="o">=</span> <span class="n">PVs</span><span class="o">.</span><span class="n">Disc_Factor</span> <span class="o">*</span> <span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">PVs</span><span class="o">.</span><span class="n">df</span><span class="p">())</span>
+
+                <span class="n">Pays</span>         <span class="n">Flow</span> <span class="n">Disc_Factor</span>              <span class="n">PV</span>
+<span class="mi">0</span>    <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">12</span>   <span class="o">-</span><span class="mf">1000000.0</span>    <span class="mf">1.000014</span> <span class="o">-</span><span class="mf">1000014.165851</span>
+<span class="mi">1</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">09</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">2</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">10</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">3</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">4</span>    <span class="mi">2023</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="o">..</span>          <span class="o">...</span>          <span class="o">...</span>         <span class="o">...</span>             <span class="o">...</span>
+<span class="mi">356</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">357</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">358</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">06</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">359</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+<span class="mi">360</span>  <span class="mi">2053</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">12</span>  <span class="mf">4216.040337</span>        <span class="mf">0.97</span>     <span class="mf">4089.559127</span>
+
+<span class="p">[</span><span class="mi">361</span> <span class="n">rows</span> <span class="n">x</span> <span class="mi">4</span> <span class="n">columns</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Disent_table is a pandas dataframe.
+The Discounted Cash Flow output would be presented as below.
+As you can see, the present value of the cash flows differs although the cash flows are same.
+Because Present value of Cash Flow=Cash Flow*Discount Factor, where discount factor has a different value on each payment frequency.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/DiscountedCF.png"><img alt="Inputs" src="_images/DiscountedCF.png" style="width: 702.0px; height: 448.5px;" /></a>
+</figure>
+<p>Lastly, the following code computes the mortgage summary.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Outputs</span>
+
+<span class="n">Outputs</span> <span class="o">=</span> <span class="n">disent_outputs</span><span class="p">()</span>
+<span class="c1"># All Computes all discounted cash flows by adding all discounted cash flows at each payment frequency</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">NPV</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">PVs</span><span class="o">.</span><span class="n">PV</span><span class="p">)</span>
+<span class="c1"># Computes the yield using payment dates and Discounted Cash Flows</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">Yield</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">xirr</span><span class="p">(</span><span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span><span class="p">,</span><span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span><span class="p">)</span> <span class="c1"># add sensitivity later</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">Model_based_price</span> <span class="o">=</span> <span class="n">Outputs</span><span class="o">.</span><span class="n">NPV</span><span class="o">/</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Principal</span><span class="o">*</span><span class="mi">100</span>
+<span class="c1"># All principal paid</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">PrincipalPaid</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Amortization_Schedule</span><span class="o">.</span><span class="n">Principal</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Outputs</span><span class="o">.</span><span class="n">df</span><span class="p">())</span>
+
+<span class="n">NPV</span>                   <span class="mf">472227.119932</span>
+<span class="n">Yield</span>                      <span class="mf">0.028177</span>
+<span class="n">Model_based_price</span>         <span class="mf">47.222712</span>
+<span class="n">PrincipalPaid</span>        <span class="mf">1000000.000000</span>
+<span class="n">dtype</span><span class="p">:</span> <span class="n">float64</span>
+</pre></div>
+</div>
+<p>Disent_outputs is a numpy array.
+The output would look like below.
+Here NPV is the sum of all present values of cash flows.
+First date of the mortgage would be a negative number since the money is invested and the rest of the date would be positive mortgage values since the money is collected.
+Yield is the return of the mortgage which is calculated by using python xirr function. Xirr function uses payment dates and Discounted Cash Flows.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Mortgage.png"><img alt="Inputs" src="_images/Mortgage.png" style="width: 1071.0px; height: 668.25px;" /></a>
+</figure>
+</section>
+<section id="bond-calculation">
+<h1>Bond Calculation<a class="headerlink" href="#bond-calculation" title="Permalink to this heading"></a></h1>
+<p>You are offering a bond and you are calculating its yield.
+Choose the Bond Calculator example from the spread book home page.
+You need to input parameters in the Spread Book and expect 2 outputs, Present Value Table and Bond Summary.</p>
+<p>How much is the Notional?… let’s put $1000</p>
+<p>What is the interest rate? … let’s put 3%</p>
+<p>How often do you pay?… let’s put semi-annual</p>
+<p>When does the bond issue? … today</p>
+<p>When would the bond mature? … In 10 years</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Bond_input.png"><img alt="Inputs" src="_images/Bond_input.png" style="width: 717.0px; height: 597.0px;" /></a>
+</figure>
+<p>The back-end python code would be</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Inputs</span><span class="o">.</span><span class="n">Issued</span> <span class="o">=</span>         <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Issued&#39;</span><span class="p">,</span>  <span class="s1">&#39;Inputs&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+<span class="n">Inputs</span><span class="o">.</span><span class="n">Tenor</span> <span class="o">=</span>          <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Tenor&#39;</span><span class="p">,</span>   <span class="s1">&#39;Inputs&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="n">rd</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>                             <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">rd</span><span class="p">)</span>
+<span class="n">Inputs</span><span class="o">.</span><span class="n">PayFreq</span> <span class="o">=</span>        <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;PayFreq&#39;</span><span class="p">,</span> <span class="s1">&#39;Inputs&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="n">rd</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>                   <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">rd</span><span class="p">)</span>
+<span class="n">Inputs</span><span class="o">.</span><span class="n">Rate</span> <span class="o">=</span>           <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Rate&#39;</span><span class="p">,</span>    <span class="s1">&#39;Inputs&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="mf">0.03</span>                                    <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">pct</span><span class="p">)</span>
+<span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span> <span class="o">=</span>       <span class="n">disent_input</span><span class="p">(</span><span class="s1">&#39;Notional&#39;</span><span class="p">,</span><span class="s1">&#39;Inputs&#39;</span><span class="p">,</span>       <span class="n">default</span><span class="o">=</span><span class="mf">1e3</span>                                             <span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">ccy</span><span class="p">(</span><span class="s1">&#39;USD&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Here ‘Inputs’ is a numpy array.</p>
+<p>Disent_spreadbook will provide zero rate and discount factor. This table is user defineable.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Spot_Curve</span> <span class="o">=</span> <span class="n">disent_spreadbook</span><span class="p">(</span><span class="s1">&#39;USD LIBOR 3M Zero Curve&#39;</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Pillar&#39;</span><span class="p">,</span><span class="s1">&#39;Zero Rate&#39;</span><span class="p">,</span><span class="s1">&#39;Disc Factor&#39;</span><span class="p">])</span>
+
+                     <span class="n">Pillar</span> <span class="n">Zero_Rate</span> <span class="n">Disc_Factor</span>
+<span class="mi">0</span>    <span class="n">relativedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=+</span><span class="mi">1</span><span class="p">)</span>    <span class="mf">0.0015</span>    <span class="mf">0.999999</span>
+<span class="mi">1</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">3</span><span class="p">)</span>      <span class="mf">0.03</span>      <span class="mf">0.9925</span>
+<span class="mi">2</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">6</span><span class="p">)</span>    <span class="mf">0.0325</span>      <span class="mf">0.9838</span>
+<span class="mi">3</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=+</span><span class="mi">9</span><span class="p">)</span>     <span class="mf">0.033</span>      <span class="mf">0.9755</span>
+<span class="mi">4</span>  <span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=+</span><span class="mi">10</span><span class="p">)</span>     <span class="mf">0.035</span>      <span class="mf">0.7189</span>
+</pre></div>
+</div>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Bond_Zero.png"><img alt="Inputs" src="_images/Bond_Zero.png" style="width: 1233.0px; height: 769.5px;" /></a>
+</figure>
+<p>The following code will show you the cash flow table. PV column used Spot_Curve.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Proceeds</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">Inputs</span><span class="o">.</span><span class="n">Issued</span>
+<span class="n">Proceeds</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="o">-</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span>
+
+<span class="n">Interest_Flows</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">serialdates</span><span class="p">(</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Issued</span><span class="p">,</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Maturity</span><span class="p">,</span><span class="n">Inputs</span><span class="o">.</span><span class="n">PayFreq</span><span class="p">)</span> <span class="o">+</span> <span class="n">dates</span><span class="o">.</span><span class="n">adj</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;NY&#39;</span><span class="p">,</span><span class="n">roll</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">Interest_Flows</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span><span class="o">*</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Rate</span><span class="o">*</span><span class="n">dates</span><span class="o">.</span><span class="n">yearfrac</span><span class="p">(</span><span class="n">Inputs</span><span class="o">.</span><span class="n">PayFreq</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;bond&#39;</span><span class="p">)</span>
+<span class="n">Repayment</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">Inputs</span><span class="o">.</span><span class="n">Maturity</span>
+<span class="n">Repayment</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span>
+
+<span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Proceeds</span><span class="o">.</span><span class="n">Pays</span><span class="p">,</span><span class="n">Interest_Flows</span><span class="o">.</span><span class="n">Pays</span><span class="p">,</span><span class="n">Repayment</span><span class="o">.</span><span class="n">Pays</span><span class="p">))</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">Proceeds</span><span class="o">.</span><span class="n">Flow</span><span class="p">,</span><span class="n">Interest_Flows</span><span class="o">.</span><span class="n">Flow</span><span class="p">,</span><span class="n">Repayment</span><span class="o">.</span><span class="n">Flow</span><span class="p">))</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">Disc_Factor</span> <span class="o">=</span> <span class="n">dscipy</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="n">Globals</span><span class="o">.</span><span class="n">Horizon</span><span class="o">+</span><span class="n">Spot_Curve</span><span class="o">.</span><span class="n">Pillar</span><span class="p">,</span><span class="n">Spot_Curve</span><span class="o">.</span><span class="n">Disc_Factor</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)(</span><span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span><span class="p">)</span>
+<span class="n">PVs</span><span class="o">.</span><span class="n">PV</span> <span class="o">=</span> <span class="n">PVs</span><span class="o">.</span><span class="n">Disc_Factor</span> <span class="o">*</span> <span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span>
+
+          <span class="n">Pays</span>    <span class="n">Flow</span> <span class="n">Disc_Factor</span>           <span class="n">PV</span>
+<span class="mi">0</span>   <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">15</span> <span class="o">-</span><span class="mf">1000.0</span>    <span class="mf">1.000099</span> <span class="o">-</span><span class="mf">1000.099418</span>
+<span class="mi">1</span>   <span class="mi">2023</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.983634</span>    <span class="mf">14.754508</span>
+<span class="mi">2</span>   <span class="mi">2023</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>     <span class="mf">0.96838</span>    <span class="mf">14.525706</span>
+<span class="mi">3</span>   <span class="mi">2024</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.954409</span>    <span class="mf">14.316128</span>
+<span class="mi">4</span>   <span class="mi">2024</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.940595</span>    <span class="mf">14.108921</span>
+<span class="mi">5</span>   <span class="mi">2025</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.926623</span>    <span class="mf">13.899342</span>
+<span class="mi">6</span>   <span class="mi">2025</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.912885</span>    <span class="mf">13.693275</span>
+<span class="mi">7</span>   <span class="mi">2026</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.898913</span>    <span class="mf">13.483696</span>
+<span class="mi">8</span>   <span class="mi">2026</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.885175</span>    <span class="mf">13.277628</span>
+<span class="mi">9</span>   <span class="mi">2027</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.871203</span>    <span class="mf">13.068049</span>
+<span class="mi">10</span>  <span class="mi">2027</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.857465</span>    <span class="mf">12.861982</span>
+<span class="mi">11</span>  <span class="mi">2028</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.843494</span>    <span class="mf">12.652403</span>
+<span class="mi">12</span>  <span class="mi">2028</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>     <span class="mf">0.82968</span>    <span class="mf">12.445197</span>
+<span class="mi">13</span>  <span class="mi">2029</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.815708</span>    <span class="mf">12.235618</span>
+<span class="mi">14</span>  <span class="mi">2029</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>     <span class="mf">0.80197</span>     <span class="mf">12.02955</span>
+<span class="mi">15</span>  <span class="mi">2030</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.787998</span>    <span class="mf">11.819971</span>
+<span class="mi">16</span>  <span class="mi">2030</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>     <span class="mf">0.77426</span>    <span class="mf">11.613904</span>
+<span class="mi">17</span>  <span class="mi">2031</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.760288</span>    <span class="mf">11.404325</span>
+<span class="mi">18</span>  <span class="mi">2031</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>     <span class="mf">0.74655</span>    <span class="mf">11.198257</span>
+<span class="mi">19</span>  <span class="mi">2032</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.732579</span>    <span class="mf">10.988678</span>
+<span class="mi">20</span>  <span class="mi">2032</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.718765</span>    <span class="mf">10.781472</span>
+<span class="mi">21</span>  <span class="mi">2033</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">17</span>    <span class="mf">15.0</span>    <span class="mf">0.704793</span>    <span class="mf">10.571893</span>
+<span class="mi">22</span>  <span class="mi">2032</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">15</span>  <span class="mf">1000.0</span>    <span class="mf">0.718917</span>   <span class="mf">718.916635</span>
+</pre></div>
+</div>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Bond_Discount.png"><img alt="Inputs" src="_images/Bond_Discount.png" style="width: 1198.5px; height: 669.0px;" /></a>
+</figure>
+<p>Here dates.serialdates function computes the payment dates, dates.adj function adjusts payment dates if the date is on a weekend .
+Dates.yearfrac function computes the fraction of the year in order to calculate the interest payment.
+Numpy.concatenate function merges payment dates, payment cash flows.
+The dscipy.interp1d interpolates the discount factor to find the discount rate with respect to the payment date.</p>
+<p>Lastly, the following code computes the bond summary where you can see your bond yield, Net present value and fair value.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Outputs</span><span class="o">.</span><span class="n">NPV</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">PVs</span><span class="o">.</span><span class="n">PV</span><span class="p">)</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">Yield</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">xirr</span><span class="p">(</span><span class="n">PVs</span><span class="o">.</span><span class="n">Pays</span><span class="p">,</span><span class="n">PVs</span><span class="o">.</span><span class="n">Flow</span><span class="p">)</span>
+<span class="n">Outputs</span><span class="o">.</span><span class="n">Model_based_price</span> <span class="o">=</span> <span class="p">(</span><span class="n">Outputs</span><span class="o">.</span><span class="n">NPV</span><span class="o">+</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span><span class="p">)</span><span class="o">/</span><span class="n">Inputs</span><span class="o">.</span><span class="n">Notional</span><span class="o">*</span><span class="mi">100</span>
+
+<span class="n">NPV</span>                 <span class="o">-</span><span class="mf">15.452280</span>
+<span class="n">Yield</span>                 <span class="mf">0.031481</span>
+<span class="n">Model_based_price</span>    <span class="mf">98.454772</span>
+</pre></div>
+</div>
+<p>Fin.xirr function calculates the bond yield</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/Bond_Output.png"><img alt="Inputs" src="_images/Bond_Output.png" style="width: 1216.5px; height: 768.0px;" /></a>
+</figure>
 </section>
 
 
